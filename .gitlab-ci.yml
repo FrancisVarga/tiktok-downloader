@@ -1,0 +1,36 @@
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  YARN_CACHE_DIR: "$CI_PROJECT_DIR/.cache/yarn"
+  NPM_CACHE_DIR: "$CI_PROJECT_DIR/.cache/nodejs"
+
+stages:
+  - run-worker
+
+cache:
+  paths:
+    - vendor/
+    - .cache/pip
+    - node_modules
+    - $YARN_CACHE_DIR
+
+.worker:
+  script:
+    - virtualenv .venv
+    - source .venv/bin/activate
+    - pip install -r requirements.txt 
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set default.region ap-northeast-1
+    - python src/app/python/app.py 
+    - node src/app/node/index.js
+  tags:
+    - UAT
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    YARN_CACHE_DIR: "$CI_PROJECT_DIR/.cache/yarn"
+
+run:
+  stage: run-worker
+  extends: .worker
+  tags:
+    - UAT
